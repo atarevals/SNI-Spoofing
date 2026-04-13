@@ -43,7 +43,7 @@ BYPASS_METHOD = "wrong_seq"
 fake_injective_connections: dict[tuple, FakeInjectiveConnection] = {}
 
 
-async def relay_main_loop(sock_1: socket.socket, sock_2: socket.socket, peer_task: asyncio.Task,
+async def relay_main_loop(sock_1: socket.socket, sock_2: socket.socket, peer_task: asyncio.Task | None,
                           first_prefix_data: bytes):
     try:
         loop = asyncio.get_running_loop()
@@ -51,21 +51,28 @@ async def relay_main_loop(sock_1: socket.socket, sock_2: socket.socket, peer_tas
             try:
                 data = await loop.sock_recv(sock_1, 65575)
                 if not data:
-                    raise ValueError("eof")
+                    break
                 if first_prefix_data:
                     data = first_prefix_data + data
                     first_prefix_data = b""
-                sent_len = await loop.sock_sendall(sock_2, data)
-                if sent_len != len(data):
-                    raise ValueError("incomplete send")
-            except Exception:
-                sock_1.close()
-                sock_2.close()
-                peer_task.cancel()
-                return
-    except Exception:
-        traceback.print_exc()
-        sys.exit("relay main loop error!")
+                await loop.sock_sendall(sock_2, data)
+            except Exception as e:
+                break
+    finally:
+        try:
+            sock_1.close()
+        except:
+            pass
+        try:
+            sock_2.close()
+        except:
+            pass
+        if peer_task is not None:
+            peer_task.cancel()
+            try:
+                await peer_task
+            except asyncio.CancelledError:
+                pass
 
 
 async def handle(incoming_sock: socket.socket, incoming_remote_addr):
