@@ -38,5 +38,8 @@ class TcpInjector(ABC):
     def run(self):
         with self.w:
             while True:
-                packet = self.w.recv(65575)
+                try:
+                    packet = self.w.recv(65575)
+                except Exception:
+                    break
                 self.inject(packet)

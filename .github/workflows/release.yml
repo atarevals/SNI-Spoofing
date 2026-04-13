@@ -1,0 +1,61 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller pydivert
+
+      - name: Download core binaries (Xray + Vwarp)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/download_bins.py
+
+      - name: Build exe with PyInstaller
+        run: |
+          pyinstaller --noconfirm --onefile --windowed ^
+            --name "SNI-Spoofer" ^
+            --add-data "bin;bin" ^
+            --add-data "config.json;." ^
+            --hidden-import core ^
+            --hidden-import core.xray_manager ^
+            --hidden-import core.vwarp_manager ^
+            --hidden-import core.binary_utils ^
+            gui.py
+        shell: cmd
+
+      - name: Prepare release assets
+        run: |
+          mkdir release
+          Copy-Item dist\SNI-Spoofer.exe release\
+          Copy-Item config.json release\
+          Copy-Item LICENSE release\
+          Compress-Archive -Path release\* -DestinationPath "SNI-Spoofer-${{ github.ref_name }}-windows-x64.zip"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "SNI Spoofer ${{ github.ref_name }}"
+          generate_release_notes: true
+          files: |
+            SNI-Spoofer-${{ github.ref_name }}-windows-x64.zip
+            dist/SNI-Spoofer.exe

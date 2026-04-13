@@ -1,4 +1,5 @@
 import asyncio
+import random
 import socket
 import sys
 import threading
@@ -31,7 +32,7 @@ class FakeTcpInjector(TcpInjector):
         self.connections = connections
 
     def fake_send_thread(self, packet: Packet, connection: FakeInjectiveConnection):
-        time.sleep(0.001)
+        time.sleep(random.uniform(0.001, 0.008))
         with connection.thread_lock:
             if not connection.monitor:
                 return
