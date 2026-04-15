@@ -1,0 +1,20 @@
+{
+  "connection_mode": "SNI Only",
+  "LISTEN_HOST": "0.0.0.0",
+  "LISTEN_PORT": 40443,
+  "CONNECT_IP": "104.16.79.73",
+  "CONNECT_PORT": 443,
+  "FAKE_SNI": "static.cloudflareinsights.com",
+  "socks_port": 10808,
+  "http_port": 10809,
+  "trojan_password": "humanity",
+  "trojan_sni": "www.creationlong.org",
+  "trojan_transport": "ws",
+  "trojan_path": "/assignment",
+  "trojan_host": "www.creationlong.org",
+  "warp_endpoint": "162.159.192.1",
+  "warp_license": "",
+  "psiphon_country": "DE",
+  "psiphon_endpoint": "162.159.193.1",
+  "psiphon_license": ""
+}
